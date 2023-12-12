@@ -59,15 +59,17 @@ def fitness(chromosome, unitData, max_loads, totalcap):
 
     # If net_reserves is negative, set it to 0
     net_reserves = np.maximum(0, net_reserves)
-    print(net_reserves)
+    print("Net Reserves:" + str(net_reserves))
     
     # The fitness is the inverse of the net reserve
     fitness = 1.0 / np.sum(net_reserves)
+    fitness_percentage = fitness * 100
+
     
-    return fitness
+    return fitness_percentage
 
 
-fitnesss = fitness(chromosome, unitData, max_loads, totalcap)
+fitness = fitness(chromosome, unitData, max_loads, totalcap)
 print(f"Generated chromosome: ")
 print(chromosome)
-print (fitnesss)
+print ("Fitness: "+ str(fitness))
