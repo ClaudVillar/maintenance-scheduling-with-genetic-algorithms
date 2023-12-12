@@ -63,10 +63,8 @@ def fitness(chromosome, unitData, max_loads, totalcap):
     # If net_reserves is negative, set it to 0
     net_reserves = np.maximum(0, net_reserves)
     print("Net Reserves: ", str(net_reserves))
-    
-    # The fitness is the inverse of the net reserv
 
-    
+    # define the fitness value is the lowest net reserve    
     return np.min(net_reserves)
 
 fitness = fitness(chromosome, unitData, max_loads, totalcap)
