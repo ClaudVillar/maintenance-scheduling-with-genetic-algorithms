@@ -34,6 +34,25 @@ def generateGenome(unitData, intervals, totalCap):
 
   return chromosome, totalCap
 
+def fitness(chromosome, totalCap, unitData, intervals, intervalLoad):
+  netReserve = np.zeros(intervals, dtype=int)
+  numChromosome = len(chromosome)
+
+  for col in range(intervals):
+    # totalLoad is the sum of capacities of the units scheduled for maintenance at each interval
+    totalLoad = 0
+
+    for row in range(numChromosome):
+      totalLoad += (chromosome[row, col] * unitData[row][0])
+    
+    netReserve[col] = totalCap - totalLoad - intervalLoad[col]
+
+  # if the net reserve at any interval is negative, the schedule is illegal, and the fitness function returns zero
+  if any(netReserve < 0):
+    return 0
+
+  # the fitness value is the lowest net reserve
+  return np.min(netReserve)
 
 
 #generate choromosome
@@ -42,5 +61,6 @@ chromosome, totalCap = generateGenome(unitData, intervals, totalCap)
 print(f"generate chromose: ")
 print(chromosome)
 print(totalCap)
-
+fitness(chromosome, totalCap, unitData, intervals, intervalLoad)
+# print(fitness(chromosome,totalCap,unitData,intervals,intervalLoad))
 #final test
