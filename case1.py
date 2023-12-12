@@ -88,3 +88,4 @@ generations = 10
 #print(chromosome)
 # print(totalCap)
 # fitness(chromosome, totalCap, unitData, intervals, intervalLoad)
+# wanako kasabot
