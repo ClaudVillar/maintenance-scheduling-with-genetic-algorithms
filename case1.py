@@ -42,3 +42,5 @@ chromosome, totalCap = generateGenome(unitData, intervals, totalCap)
 print(f"generate chromose: ")
 print(chromosome)
 print(totalCap)
+
+#test
