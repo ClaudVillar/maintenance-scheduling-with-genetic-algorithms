@@ -6,6 +6,11 @@ num_intervals = 4
 max_loads = [80, 90, 65, 70]
 totalcap = 0  # Initialize totalcap
 
+# Define the GA parameters
+pop_size = 10
+num_generations = 1000
+mutation_rate = 0.01
+
 # Define the unit data for its capacities and maintenance intervals
 unitData = np.array([
     (20, 2),
@@ -48,28 +53,25 @@ def fitness(chromosome, unitData, max_loads, totalcap):
     
     # Calculate the total capacity for each interval
     installed_capacity = np.sum(chromosome * unit_capacity, axis=0)
-    print(installed_capacity)
     
     # Calculate the difference between the total capacity and the maximum loads
     total_installed_capacity = np.abs(totalcap - installed_capacity)
-    print(total_installed_capacity)
     
     # Calculate net reserves
     net_reserves = total_installed_capacity - max_loads
 
     # If net_reserves is negative, set it to 0
     net_reserves = np.maximum(0, net_reserves)
-    print("Net Reserves:" + str(net_reserves))
+    print("Net Reserves: ", str(net_reserves))
     
-    # The fitness is the inverse of the net reserve
-    fitness = 1.0 / np.sum(net_reserves)
-    fitness_percentage = fitness * 100
+    # The fitness is the inverse of the net reserv
 
     
-    return fitness_percentage
-
+    return np.min(net_reserves)
 
 fitness = fitness(chromosome, unitData, max_loads, totalcap)
+
 print(f"Generated chromosome: ")
 print(chromosome)
 print ("Fitness: "+ str(fitness))
+
