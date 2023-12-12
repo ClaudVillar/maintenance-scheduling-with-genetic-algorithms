@@ -43,4 +43,4 @@ print(f"generate chromose: ")
 print(chromosome)
 print(totalCap)
 
-#test 2
+#final test
