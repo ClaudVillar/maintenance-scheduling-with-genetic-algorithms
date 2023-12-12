@@ -12,8 +12,9 @@ unitData = np.array([
     (10, 1)
 ])
 
+totalCap = sum(unitData[i][0] for i in range(len(unitData)))
 
-def generateGenome(unitData, intervals, totalCap):
+def generateGenome(unitData, intervals):
   # empty 
   numUnits = len(unitData)
   
@@ -30,9 +31,7 @@ def generateGenome(unitData, intervals, totalCap):
     for interval in range(startInterval, startInterval + unitData[unit][1]):
       chromosome[unit, interval] = 1
 
-    totalCap = totalCap + unitData[unit][0]
-
-  return chromosome, totalCap
+  return chromosome
 
 def fitness(chromosome, totalCap, unitData, intervals, intervalLoad):
   netReserve = np.zeros(intervals, dtype=int)
@@ -46,21 +45,46 @@ def fitness(chromosome, totalCap, unitData, intervals, intervalLoad):
       totalLoad += (chromosome[row, col] * unitData[row][0])
     
     netReserve[col] = totalCap - totalLoad - intervalLoad[col]
-
+  
   # if the net reserve at any interval is negative, the schedule is illegal, and the fitness function returns zero
   if any(netReserve < 0):
     return 0
-
+  
   # the fitness value is the lowest net reserve
   return np.min(netReserve)
 
+def spCrossover(parent1, parent2, crossoverProbability):
+  numUnits = len(unitData)
+  crossoverPoint = np.random.randint(1, numUnits)
+  
+  child1 = parent1[:crossoverPoint] + parent2[crossoverPoint:]
+  child2 = parent2[:crossoverPoint] + parent1[crossoverPoint:]
 
-#generate choromosome
-chromosome, totalCap = generateGenome(unitData, intervals, totalCap)
+  return child1, child2
 
-print(f"generate chromose: ")
-print(chromosome)
-print(totalCap)
-fitness(chromosome, totalCap, unitData, intervals, intervalLoad)
-# print(fitness(chromosome,totalCap,unitData,intervals,intervalLoad))
-#final test
+populationSize = 20
+mutationRate = 0.01
+crossoverProbability = 0.7
+generations = 10
+
+# initial population
+# Population = np.array([generateGenome(unitData, intervals) for _ in range(populationSize)])
+
+# fitnessValues = np.zeros((generations, populationSize), dtype=int)
+
+# for generation in range(generations):
+
+#   # calc fitness for each chromosome in population
+#   for i, chromosome in enumerate(Population):
+#     fitnessValues[generation, i] = fitness(chromosome,totalCap,unitData,intervals,intervalLoad)
+#   print(fitnessValues[generation,i])
+
+
+# totalFitness = np.sum(fitnessValues)
+# generate choromosome
+# chromosome = generateGenome(unitData, intervals)
+
+#print(f"generate chromose: ")
+#print(chromosome)
+# print(totalCap)
+# fitness(chromosome, totalCap, unitData, intervals, intervalLoad)
