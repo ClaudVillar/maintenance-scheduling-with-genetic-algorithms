@@ -39,8 +39,22 @@ def generateGenome(unitData, num_intervals):
 
     return chromosome
 
-# Generate a chromosome
-# chromosome = generateGenome(unitData, num_intervals)
+
+# Fitness-Proportionate Selection selection algorithm
+# where the fitness of an individual is directly proportional to its probability of being selected
+def roulette_wheel_selection(population):
+    # Extract fitness values from the population
+    fitness_values = np.array([individual["fitness"] for individual in population])
+
+    # Calculate selection probabilities based on fitness values
+    selection_probabilities = fitness_values / fitness_values.sum()
+
+    # Use NumPy's random.choice to select an index from the population array based on the calculated probabilities
+    selected_index = np.random.choice(len(population), p=selection_probabilities)
+
+    # Return the chromosome of the selected individual
+    return population[selected_index]["chromosome"]
+
 
 # Calculate the fitness of the chromosome
 def calculate_fitness(chromosome, unitData, num_intervals, max_loads, totalcap):
@@ -62,9 +76,6 @@ def calculate_fitness(chromosome, unitData, num_intervals, max_loads, totalcap):
     
     # define the fitness value as the lowest net reserve    
     return np.min(net_reserves)
-
-# Generate Fitness of the chromosome
-# fitness = calculate_fitness(chromosome, unitData, num_intervals, max_loads, totalcap)
 
 def initialize_population(pop_size, unitData, num_intervals, max_loads, totalcap):
     population = []
