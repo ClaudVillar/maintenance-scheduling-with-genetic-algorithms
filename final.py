@@ -7,10 +7,10 @@ max_loads = [80, 90, 65, 70]
 totalcap = 150  # Initialize totalcap
 
 # Define the GA parameters
-pop_size = 10
-num_generations = 20
+pop_size = 100
+num_generations = 100
 mutation_rate = 0.01
-tournament_size = 3
+crossover_rate = 0.7
 
 # Define the unit data for its capacities and maintenance intervals
 unitData = np.array([
@@ -40,6 +40,8 @@ def generateGenome(unitData, num_intervals):
 
     return chromosome
 
+# Fitness-Proportionate Selection
+# where the fitness of an individual is directly proportional to its probability of being selected
 def roulette_wheel_selection(population):
     fitness_values = np.array([individual["fitness"] for individual in population])
     selection_probabilities = fitness_values / fitness_values.sum()
@@ -47,6 +49,7 @@ def roulette_wheel_selection(population):
     selected_index = np.random.choice(len(population), p=selection_probabilities)
     return population[selected_index]["chromosome"]
 
+# Classic crossover function
 def crossover(parent1, parent2, crossover_rate):
     # Check if crossover should be performed based on the crossover rate
     if np.random.rand() < crossover_rate:
@@ -60,18 +63,25 @@ def crossover(parent1, parent2, crossover_rate):
 
     return child1, child2
 
+# Classic mutation function
 def mutate(chromosome, mutation_rate):
     # Flip bits with probability determined by the mutation rate
     mutated_chromosome = chromosome ^ (np.random.rand(*chromosome.shape) < mutation_rate).astype(int)
 
     return mutated_chromosome
 
+# Fitness function based on the net_reserves of the chromosome of an individual
 def calculate_fitness(chromosome, unitData, num_intervals, max_loads, totalcap):
     net_reserves = np.zeros(num_intervals, dtype=int)
     numChromosome = len(chromosome)
 
     for col in range(num_intervals):
-        totalLoad = np.sum(chromosome[:, col] * unitData[:, 0])
+        totalLoad = 0
+
+        # totalLoad is the sum of capacities of the units scheduled for maintenance at each interval
+        for row in range(numChromosome):
+            totalLoad += (chromosome[row, col] * unitData[row][0])
+
         net_reserves[col] = totalcap - totalLoad - max_loads[col]
 
     # If the net reserve at any interval is negative, the schedule is illegal, and the fitness function returns zero
@@ -89,16 +99,16 @@ def initialize_population(pop_size, unitData, num_intervals, max_loads, totalcap
         population.append({"chromosome": chromosome, "fitness": fitness_value})
     return population
 
-def genetic_algorithm(unitData, num_intervals, max_loads, totalcap, pop_size, num_generations, mutation_rate, tournament_size):
+def genetic_algorithm(unitData, num_intervals, max_loads, totalcap, pop_size, num_generations, mutation_rate, crossover_rate):
     # Initialize population
     population = initialize_population(pop_size, unitData, num_intervals, max_loads, totalcap)
 
     for generation in range(num_generations):
-        # Select parents using tournament selection
+        # Select parents using Fitness-Proportionate selection
         parents = [roulette_wheel_selection(population) for _ in range(2)]
 
         # Perform crossover to generate offspring
-        offspring1, offspring2 = crossover(parents[0], parents[1], crossover_rate=0.8)
+        offspring1, offspring2 = crossover(parents[0], parents[1], crossover_rate)
 
         # Perform mutation on offspring
         offspring1 = mutate(offspring1, mutation_rate)
@@ -121,7 +131,7 @@ def genetic_algorithm(unitData, num_intervals, max_loads, totalcap, pop_size, nu
     return population
 
 # Run the genetic algorithm
-final_population = genetic_algorithm(unitData, num_intervals, max_loads, totalcap, pop_size, num_generations, mutation_rate, tournament_size)
+final_population = genetic_algorithm(unitData, num_intervals, max_loads, totalcap, pop_size, num_generations, mutation_rate, crossover_rate)
 
 # Print the best individual in the final population
 best_individual = max(final_population, key=lambda x: x["fitness"])
