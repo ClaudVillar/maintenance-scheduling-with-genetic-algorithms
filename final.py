@@ -4,7 +4,7 @@ import numpy as np
 num_units = 7
 num_intervals = 4
 max_loads = [80, 90, 65, 70]
-totalcap = 150  # Initialize totalcap
+totalcap = 0  # Initialize totalcap
 
 # Define the GA parameters
 pop_size = 100
@@ -22,6 +22,9 @@ unitData = np.array([
     (15, 1),
     (10, 1)
 ])
+
+# Find the total installed capacity of the units
+totalcap = sum(unitData[i][0] for i in range(len(unitData)))
 
 # Generate a chromosome
 def generateGenome(unitData, num_intervals):
