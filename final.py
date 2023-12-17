@@ -1,3 +1,4 @@
+import matplotlib.pyplot as plt
 import numpy as np
 
 # Define the problem parameters
@@ -7,9 +8,9 @@ max_loads = [80, 90, 65, 70]
 totalcap = 0  # Initialize totalcap
 
 # Define the GA parameters
-pop_size = 100
-num_generations = 100
-mutation_rate = 0.01
+pop_size = 20
+num_generations = 50
+mutation_rate = 0.001
 crossover_rate = 0.7
 
 # Define the unit data for its capacities and maintenance intervals
@@ -91,7 +92,7 @@ def calculate_fitness(chromosome, unitData, num_intervals, max_loads, totalcap):
     if any(net_reserves < 0):
         return 0
 
-    # Define the fitness value as the lowest net reserve    
+    # Define the fitness value as the lowest net reserve
     return np.min(net_reserves)
 
 def initialize_population(pop_size, unitData, num_intervals, max_loads, totalcap):
@@ -105,6 +106,10 @@ def initialize_population(pop_size, unitData, num_intervals, max_loads, totalcap
 def genetic_algorithm(unitData, num_intervals, max_loads, totalcap, pop_size, num_generations, mutation_rate, crossover_rate):
     # Initialize population
     population = initialize_population(pop_size, unitData, num_intervals, max_loads, totalcap)
+
+    # Lists to store the best and average fitness values in each generation
+    best_fitness_values = []
+    average_fitness_values = []
 
     for generation in range(num_generations):
         # Select parents using Fitness-Proportionate selection
@@ -126,19 +131,57 @@ def genetic_algorithm(unitData, num_intervals, max_loads, totalcap, pop_size, nu
         population[0] = {"chromosome": offspring1, "fitness": fitness_offspring1}
         population[1] = {"chromosome": offspring2, "fitness": fitness_offspring2}
 
-        # Print the best individual in the current generation
+        # Store the best fitness value in the current generation
         best_individual = max(population, key=lambda x: x["fitness"])
-        print(f"Generation {generation + 1}, Best Fitness: {best_individual['fitness']}")
+        best_fitness_values.append(best_individual['fitness'])
+
+        # Calculate and store the average fitness value in the current generation
+        average_fitness = np.mean([individual["fitness"] for individual in population])
+        average_fitness_values.append(average_fitness)
+
+        print(f"Generation {generation + 1}, Best Fitness: {best_individual['fitness']}, Average Fitness: {average_fitness}")
+
+    # Plotting the best and average fitness values in every generation
+    plt.plot(range(1, num_generations + 1), best_fitness_values, label='Best Fitness')
+    plt.plot(range(1, num_generations + 1), average_fitness_values, label='Average Fitness')
+    plt.xlabel('Generation')
+    plt.ylabel('Fitness Value')
+    plt.title('Best and Average Fitness in Every Generation')
+    plt.legend()
+    plt.show()
 
     # Return the final population
     return population
 
+def print_best_chromosome(final_population):
+    best_individual = max(final_population, key=lambda x: x["fitness"])
+    print("\nBest Chromosome in the Final Population:")
+    print("Chromosome:")
+    print(best_individual["chromosome"])
+    print("Fitness:", best_individual["fitness"])
+
+def plot_chromosome(chromosome, unitData):
+    num_units, num_intervals = chromosome.shape
+    x_values = np.arange(1, num_intervals + 1)
+
+    # Plot each unit that is on for each interval
+    for unit in range(num_units):
+        on_units = np.where(chromosome[unit] == 1)[0]
+        if len(on_units) > 0:
+            plt.scatter(x_values[on_units], np.full_like(on_units, unit + 1), marker='o', label=f'Unit {unit + 1}')
+
+    plt.xlabel('Intervals')
+    plt.yticks(np.arange(1, num_units + 1), labels=[f'Unit {unit + 1}' for unit in range(num_units)])
+    plt.title('Chromosome Representation')
+    plt.legend()
+    plt.show()
+
 # Run the genetic algorithm
 final_population = genetic_algorithm(unitData, num_intervals, max_loads, totalcap, pop_size, num_generations, mutation_rate, crossover_rate)
 
-# Print the best individual in the final population
-best_individual = max(final_population, key=lambda x: x["fitness"])
-print("\nBest Individual in the Final Population:")
-print("Chromosome:")
-print(best_individual["chromosome"])
-print("Fitness:", best_individual["fitness"])
+# Print the best chromosome in the final population
+print_best_chromosome(final_population)
+
+# Plot the best chromosome
+best_chromosome = max(final_population, key=lambda x: x["fitness"])["chromosome"]
+plot_chromosome(best_chromosome, unitData)
