@@ -1,4 +1,6 @@
 import numpy as np
+import matplotlib.pyplot as plt
+
 totalCap = 0
 intervals = 4
 intervalLoad = [80,90,65,70]
@@ -12,12 +14,10 @@ unitData = np.array([
     (10, 1)
 ])
 
-
 populationSize = 20
 mutationRate = 0.001
 crossoverRate = 0.7
 numGenerations = 50
-
 
 totalCap = sum(unitData[i][0] for i in range(len(unitData)))
 
@@ -111,6 +111,9 @@ def geneticAlgo(unitData, intervals, intervalLoad, totalCap, populationSize, num
   # initialize Population
   Population, fitnessValues = initPopulation(populationSize, unitData, intervals, intervalLoad, totalCap)
 
+  best_fitness_values = []
+  average_fitness_values = []
+
   for generation in range(numGenerations):
     
     parents = [rouletteSelection(Population, fitnessValues) for _ in range(2)]
@@ -138,6 +141,19 @@ def geneticAlgo(unitData, intervals, intervalLoad, totalCap, populationSize, num
     # prints the best individual in the current generation
     best_individual = max(Population, key=lambda x: x["fitness"])
     print(f"Generation {generation + 1}, Best Fitness: {best_individual['fitness']}")
+    best_fitness_values.append(best_individual['fitness'])
+
+    # calculates and stores the average fitness value in the current generation
+    average_fitness = np.mean([individual["fitness"] for individual in Population])
+    average_fitness_values.append(average_fitness)
+  
+  plt.plot(range(1, numGenerations + 1), best_fitness_values, label='Best Fitness')
+  plt.plot(range(1, numGenerations + 1), average_fitness_values, label='Average Fitness')
+  plt.xlabel('Generation')
+  plt.ylabel('Fitness Value')
+  plt.title('Best and Average Fitness in Every Generation')
+  plt.legend()
+  plt.show()
 
   return Population
 
