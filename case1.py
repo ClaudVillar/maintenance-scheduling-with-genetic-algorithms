@@ -84,12 +84,12 @@ def mutation(chromosome, mutationRate):
     mutationMask = (np.random.rand(*chromosome.shape) < mutationRate).astype(int)
 
     for unit in range(len(unitData)):
-        requiredMaintenance = unitData[unit][1]
+      requiredMaintenance = unitData[unit][1]
 
-        # Ensure that the mutation maintains the required maintenance intervals
-        for i in range(intervals - requiredMaintenance + 1):
-            if mutationMask[unit, i:i + requiredMaintenance].all():
-                mutated[unit, i:i + requiredMaintenance] = 1
+      # Ensure that the mutation maintains the required maintenance intervals
+      for i in range(intervals - requiredMaintenance + 1):
+        if mutationMask[unit, i:i + requiredMaintenance].all():
+          mutated[unit, i:i + requiredMaintenance] = 1
 
     return mutated
 
