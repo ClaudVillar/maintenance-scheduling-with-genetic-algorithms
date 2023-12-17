@@ -9,7 +9,7 @@ totalcap = 0  # Initialize totalcap
 
 # Define the GA parameters
 pop_size = 20
-num_generations = 50
+num_generations = 100
 mutation_rate = 0.001
 crossover_rate = 0.7
 
@@ -68,11 +68,19 @@ def crossover(parent1, parent2, crossover_rate):
     return child1, child2
 
 # Classic mutation function
-def mutate(chromosome, mutation_rate):
-    # Flip bits with probability determined by the mutation rate
-    mutated_chromosome = chromosome ^ (np.random.rand(*chromosome.shape) < mutation_rate).astype(int)
+def mutate(chromosome, mutationRate):
+    mutated = np.copy(chromosome)
+    mutationMask = (np.random.rand(*chromosome.shape) < mutationRate).astype(int)
 
-    return mutated_chromosome
+    for unit in range(len(unitData)):
+        requiredMaintenance = unitData[unit][1]
+
+        # Ensure that the mutation maintains the required maintenance intervals
+        for i in range(num_intervals - requiredMaintenance + 1):
+            if mutationMask[unit, i:i + requiredMaintenance].all():
+                mutated[unit, i:i + requiredMaintenance] = 1
+
+    return mutated
 
 # Fitness function based on the net_reserves of the chromosome of an individual
 def calculate_fitness(chromosome, unitData, num_intervals, max_loads, totalcap):
@@ -85,7 +93,6 @@ def calculate_fitness(chromosome, unitData, num_intervals, max_loads, totalcap):
         # totalLoad is the sum of capacities of the units scheduled for maintenance at each interval
         for row in range(numChromosome):
             totalLoad += (chromosome[row, col] * unitData[row][0])
-
         net_reserves[col] = totalcap - totalLoad - max_loads[col]
 
     # If the net reserve at any interval is negative, the schedule is illegal, and the fitness function returns zero
@@ -160,28 +167,43 @@ def print_best_chromosome(final_population):
     print(best_individual["chromosome"])
     print("Fitness:", best_individual["fitness"])
 
-def plot_chromosome(chromosome, unitData):
-    num_units, num_intervals = chromosome.shape
-    x_values = np.arange(1, num_intervals + 1)
 
-    # Plot each unit that is on for each interval
-    for unit in range(num_units):
-        on_units = np.where(chromosome[unit] == 1)[0]
-        if len(on_units) > 0:
-            plt.scatter(x_values[on_units], np.full_like(on_units, unit + 1), marker='o', label=f'Unit {unit + 1}')
-
-    plt.xlabel('Intervals')
-    plt.yticks(np.arange(1, num_units + 1), labels=[f'Unit {unit + 1}' for unit in range(num_units)])
-    plt.title('Chromosome Representation')
-    plt.legend()
-    plt.show()
 
 # Run the genetic algorithm
 final_population = genetic_algorithm(unitData, num_intervals, max_loads, totalcap, pop_size, num_generations, mutation_rate, crossover_rate)
 
-# Print the best chromosome in the final population
-print_best_chromosome(final_population)
+def plot_chromosome(chromosome, unitData, max_loads, totalcap):
+    num_units, num_intervals = chromosome.shape
+    x_values = np.arange(num_intervals) + 1  # Adjusted to start from 1 for intervals
+
+    # Reshape unit capacities for correct alignment with the chromosome
+    unit_capacities = unitData[:, 0].reshape(num_units, 1)
+
+    # Calculate the cumulative sum of unit capacities for each interval
+    cumulative_sum = np.cumsum(chromosome * unit_capacities, axis=0)
+
+    # Plot the cumulative sum for each unit
+    for unit in range(num_units):
+        plt.bar(x_values, cumulative_sum[unit], bottom=np.sum(cumulative_sum[:unit], axis=0), label=f'Unit {unit + 1}')
+
+    # Add annotations for max loads, total loads, and net reserves
+    for col in range(num_intervals):
+        total_load = np.sum(chromosome[:, col] * unit_capacities)
+        net_reserve = totalcap - total_load - max_loads[col]
+
+        plt.text(x_values[col], totalcap + 5, f'Max Load: {max_loads[col]}', ha='center')
+        plt.text(x_values[col], totalcap + 15, f'Total Load: {total_load}', ha='center')
+        plt.text(x_values[col], totalcap + 25, f'Net Reserve: {net_reserve}', ha='center')
+
+    plt.xlabel('Intervals')
+    plt.ylabel('Cumulative Capacity Used')
+    plt.title('Chromosome Representation')
+    plt.legend()
+    plt.show()
 
 # Plot the best chromosome
 best_chromosome = max(final_population, key=lambda x: x["fitness"])["chromosome"]
-plot_chromosome(best_chromosome, unitData)
+
+# Print the best chromosome in the final population
+print_best_chromosome(final_population)
+plot_chromosome(best_chromosome, unitData, max_loads, totalcap)
